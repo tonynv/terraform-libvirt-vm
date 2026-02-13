@@ -94,3 +94,11 @@ variable "login_banner" {
   type        = string
   default     = ""
 }
+
+# --- Dotfiles ---
+
+variable "dotfiles_repo" {
+  description = "Git repository URL for dotfiles to clone and set up for the default user."
+  type        = string
+  default     = "https://github.com/tonynv/dotfiles.git"
+}

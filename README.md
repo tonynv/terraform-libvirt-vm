@@ -11,6 +11,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 - Optional CIFS/SMB shared filesystem mounts
 - Secrets management via `secret.auto.tfvars` (gitignored)
 - Customizable login banners (`/etc/issue` and `/etc/motd`)
+- Configurable dotfiles provisioning
 - Autostart support for Cockpit/virsh management
 
 ## Quick Start
@@ -84,6 +85,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 | `cifs_password`  | CIFS authentication password.                                  | `string` | --                                     |
 | `vm_password`    | Password for root and tonynv users. Empty = SSH-key-only.      | `string` | `""`                                   |
 | `login_banner`   | Custom login banner text. If empty, uses the default banner.   | `string` | `""`                                   |
+| `dotfiles_repo`  | Git repo URL for dotfiles to clone for the default user.       | `string` | `"https://github.com/tonynv/dotfiles.git"` |
 
 ## Outputs
 
@@ -147,7 +149,17 @@ Each VM is provisioned with a cloud-init ISO generated from `cloud-init.cfg`. Th
 - **Serial console** -- enables `serial-getty@ttyS0` for `virsh console` access
 - **Login banner** -- writes custom or default banner to `/etc/issue` and `/etc/motd`
 - **CIFS mounts** -- optionally mounts a `/sharedfs` SMB share via `/etc/fstab`
-- **Dotfiles** -- clones and runs a dotfiles setup script for the `tonynv` user
+- **Dotfiles** -- clones a configurable dotfiles repo and runs setup for the `tonynv` user
+
+### Dotfiles Provisioning
+
+On first boot, cloud-init clones the repository specified by `dotfiles_repo` into the `tonynv` user's home directory and runs `tonynv_setup.sh`. To use your own dotfiles:
+
+```hcl
+dotfiles_repo = "https://github.com/youruser/dotfiles.git"
+```
+
+The setup script is expected to live at the root of the repo as `tonynv_setup.sh`. If your repo uses a different entrypoint, modify the `runcmd` section in `cloud-init.cfg`.
 
 ### CIFS/SMB Mounts
 

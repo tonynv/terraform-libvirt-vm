@@ -62,6 +62,7 @@ resource "libvirt_cloudinit_disk" "vm_cloudinit" {
     cifs_password  = var.cifs_password
     vm_password    = var.vm_password
     login_banner   = var.login_banner
+    dotfiles_repo  = var.dotfiles_repo
   })
 }
 
