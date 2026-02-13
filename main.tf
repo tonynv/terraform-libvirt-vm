@@ -46,6 +46,19 @@ resource "libvirt_volume" "vm_disk" {
   format         = "qcow2"
 }
 
+# --- Cloud-init disk per VM ---
+
+resource "libvirt_cloudinit_disk" "vm_cloudinit" {
+  count = var.vm_count
+  name  = "${local.vm_name_prefix}-${count.index}-cloudinit.iso"
+  pool  = "default"
+
+  user_data = templatefile("${path.module}/cloud-init.cfg", {
+    hostname       = "${local.vm_name_prefix}-${count.index}"
+    ssh_public_key = trimspace(file(pathexpand(var.ssh_public_key)))
+  })
+}
+
 # --- VM domain ---
 
 resource "libvirt_domain" "vm" {
@@ -56,6 +69,7 @@ resource "libvirt_domain" "vm" {
   machine = "q35"
 
   autostart = var.autostart
+  cloudinit = libvirt_cloudinit_disk.vm_cloudinit[count.index].id
 
   disk {
     volume_id = libvirt_volume.vm_disk[count.index].id

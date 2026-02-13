@@ -7,6 +7,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 - Provision one or more VMs from a pre-built qcow2 base image (Copy-on-Write clones)
 - Auto-generated VM naming based on hypervisor hostname and OS type
 - Serial console and VNC graphics support
+- Cloud-init for automated guest configuration (hostname, users, SSH keys)
 - Autostart support for Cockpit/virsh management
 
 ## Quick Start
@@ -65,6 +66,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 | `disk_size`      | Disk size in bytes (default 20 GB).                            | `number` | `21474836480`                          |
 | `base_image`     | Path to the pre-built qcow2 base image.                       | `string` | `"../output/tonynv-ubuntu2404.qcow2"` |
 | `network_name`   | Libvirt network name to attach VMs to.                         | `string` | `"vlan200"`                            |
+| `ssh_public_key` | Path to SSH public key to inject into VMs.                     | `string` | `"~/.ssh/id_rsa.pub"`                 |
 | `autostart`      | Auto-start VMs on host boot (required for Cockpit management). | `bool`   | `true`                                 |
 
 ## Outputs
@@ -73,3 +75,16 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 |------------|--------------------------------------------|
 | `vm_names` | Names of the created VMs.                  |
 | `vm_ips`   | IP addresses of the created VMs (from DHCP). |
+
+## Cloud-Init Configuration
+
+Each VM is provisioned with a cloud-init ISO generated from `cloud-init.cfg`. The template uses Terraform's `templatefile()` function to inject per-VM values at plan time.
+
+### What cloud-init configures
+
+- **Hostname** -- set to `{vm_name_prefix}-{index}` for each VM
+- **User account** -- creates a `tonynv` user with passwordless sudo and your SSH public key
+- **SSH access** -- injects the public key from `ssh_public_key` (defaults to `~/.ssh/id_rsa.pub`)
+- **Packages** -- installs `git`, `curl`, and `zsh` on first boot
+- **Serial console** -- enables `serial-getty@ttyS0` for `virsh console` access
+- **Dotfiles** -- clones and runs a dotfiles setup script for the `tonynv` user

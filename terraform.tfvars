@@ -5,3 +5,4 @@ vcpus          = 2
 disk_size      = 21474836480 # 20 GB
 base_image     = "../output/tonynv-ubuntu2404.qcow2"
 network_name   = "vlan200"
+ssh_public_key = "~/.ssh/id_rsa.pub"

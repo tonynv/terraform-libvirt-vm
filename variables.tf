@@ -40,6 +40,12 @@ variable "network_name" {
   default     = "vlan200"
 }
 
+variable "ssh_public_key" {
+  description = "Path to SSH public key to inject into VMs."
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
 variable "autostart" {
   description = "Auto-start VMs on host boot (required for Cockpit management)."
   type        = bool
