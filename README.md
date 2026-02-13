@@ -10,6 +10,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 - Cloud-init for automated guest configuration (hostname, users, SSH keys)
 - Optional CIFS/SMB shared filesystem mounts
 - Secrets management via `secret.auto.tfvars` (gitignored)
+- Customizable login banners (`/etc/issue` and `/etc/motd`)
 - Autostart support for Cockpit/virsh management
 
 ## Quick Start
@@ -82,6 +83,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 | `cifs_username`  | CIFS authentication username.                                  | `string` | --                                     |
 | `cifs_password`  | CIFS authentication password.                                  | `string` | --                                     |
 | `vm_password`    | Password for root and tonynv users. Empty = SSH-key-only.      | `string` | `""`                                   |
+| `login_banner`   | Custom login banner text. If empty, uses the default banner.   | `string` | `""`                                   |
 
 ## Outputs
 
@@ -143,6 +145,7 @@ Each VM is provisioned with a cloud-init ISO generated from `cloud-init.cfg`. Th
 - **Password auth** -- optionally sets passwords for `root` and `tonynv` when `vm_password` is provided
 - **Packages** -- installs `git`, `curl`, and `zsh` on first boot
 - **Serial console** -- enables `serial-getty@ttyS0` for `virsh console` access
+- **Login banner** -- writes custom or default banner to `/etc/issue` and `/etc/motd`
 - **CIFS mounts** -- optionally mounts a `/sharedfs` SMB share via `/etc/fstab`
 - **Dotfiles** -- clones and runs a dotfiles setup script for the `tonynv` user
 

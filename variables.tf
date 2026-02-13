@@ -86,3 +86,11 @@ variable "vm_password" {
   default     = ""
   sensitive   = true
 }
+
+# --- Login banner ---
+
+variable "login_banner" {
+  description = "Custom login banner text. If empty, uses the default banner."
+  type        = string
+  default     = ""
+}

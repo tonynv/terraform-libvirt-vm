@@ -11,3 +11,6 @@ ssh_public_key = "~/.ssh/id_rsa.pub"
 cifs_enabled = true
 cifs_server  = "10.0.0.100"
 # cifs_username and cifs_password are in secret.auto.tfvars (gitignored)
+
+# Login banner (leave empty for default)
+login_banner = ""
