@@ -77,3 +77,12 @@ variable "cifs_password" {
   type        = string
   sensitive   = true
 }
+
+# --- VM password ---
+
+variable "vm_password" {
+  description = "Password for root and tonynv users. Leave empty for SSH-key-only auth."
+  type        = string
+  default     = ""
+  sensitive   = true
+}

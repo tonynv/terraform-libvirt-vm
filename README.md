@@ -9,6 +9,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 - Serial console and VNC graphics support
 - Cloud-init for automated guest configuration (hostname, users, SSH keys)
 - Optional CIFS/SMB shared filesystem mounts
+- Secrets management via `secret.auto.tfvars` (gitignored)
 - Autostart support for Cockpit/virsh management
 
 ## Quick Start
@@ -41,7 +42,14 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
    network_name   = "vlan200"
    ```
 
-3. Initialize and apply:
+3. Create your secrets file (see [Secrets Management](#secrets-management)):
+
+   ```bash
+   cp secret.auto.tfvars.example secret.auto.tfvars
+   # Edit secret.auto.tfvars with your credentials
+   ```
+
+4. Initialize and apply:
 
    ```bash
    terraform init
@@ -49,7 +57,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
    terraform apply
    ```
 
-4. View your VM details:
+5. View your VM details:
 
    ```bash
    terraform output vm_names
@@ -73,6 +81,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 | `cifs_server`    | CIFS/SMB server IP or hostname.                                | `string` | `"10.0.0.100"`                         |
 | `cifs_username`  | CIFS authentication username.                                  | `string` | --                                     |
 | `cifs_password`  | CIFS authentication password.                                  | `string` | --                                     |
+| `vm_password`    | Password for root and tonynv users. Empty = SSH-key-only.      | `string` | `""`                                   |
 
 ## Outputs
 
@@ -80,6 +89,47 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 |------------|--------------------------------------------|
 | `vm_names` | Names of the created VMs.                  |
 | `vm_ips`   | IP addresses of the created VMs (from DHCP). |
+
+## Secrets Management
+
+Sensitive values are kept out of version control using Terraform's `*.auto.tfvars` pattern.
+
+### How it works
+
+1. **`secret.auto.tfvars.example`** -- checked into git as a template with empty values
+2. **`secret.auto.tfvars`** -- your actual secrets file, listed in `.gitignore` so it is never committed
+3. Terraform automatically loads any `*.auto.tfvars` files, so secrets are injected without passing `-var` flags
+
+### Setup
+
+```bash
+cp secret.auto.tfvars.example secret.auto.tfvars
+```
+
+Then edit `secret.auto.tfvars` with your values:
+
+```hcl
+cifs_username = "myuser"
+cifs_password = "mypassword"
+vm_password   = "optional-vm-login-password"
+```
+
+### Sensitive variables
+
+All secret variables are marked with `sensitive = true` in `variables.tf`, which means:
+
+- Terraform will **not** display their values in `plan` or `apply` output
+- They are still stored in **plaintext** in `terraform.tfstate` -- protect your state file accordingly
+- The `secret.auto.tfvars` file is gitignored to prevent accidental commits
+
+### VM password behavior
+
+| `vm_password` value | SSH password auth | `lock_passwd` | Users affected     |
+|---------------------|-------------------|---------------|--------------------|
+| `""` (empty)        | Disabled          | `true`        | --                 |
+| `"somepassword"`    | Enabled           | `false`       | `root`, `tonynv`   |
+
+When `vm_password` is empty (the default), VMs are accessible only via SSH key authentication.
 
 ## Cloud-Init Configuration
 
@@ -90,6 +140,7 @@ Each VM is provisioned with a cloud-init ISO generated from `cloud-init.cfg`. Th
 - **Hostname** -- set to `{vm_name_prefix}-{index}` for each VM
 - **User account** -- creates a `tonynv` user with passwordless sudo and your SSH public key
 - **SSH access** -- injects the public key from `ssh_public_key` (defaults to `~/.ssh/id_rsa.pub`)
+- **Password auth** -- optionally sets passwords for `root` and `tonynv` when `vm_password` is provided
 - **Packages** -- installs `git`, `curl`, and `zsh` on first boot
 - **Serial console** -- enables `serial-getty@ttyS0` for `virsh console` access
 - **CIFS mounts** -- optionally mounts a `/sharedfs` SMB share via `/etc/fstab`
