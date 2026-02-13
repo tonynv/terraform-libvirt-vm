@@ -56,6 +56,10 @@ resource "libvirt_cloudinit_disk" "vm_cloudinit" {
   user_data = templatefile("${path.module}/cloud-init.cfg", {
     hostname       = "${local.vm_name_prefix}-${count.index}"
     ssh_public_key = trimspace(file(pathexpand(var.ssh_public_key)))
+    cifs_enabled   = var.cifs_enabled
+    cifs_server    = var.cifs_server
+    cifs_username  = var.cifs_username
+    cifs_password  = var.cifs_password
   })
 }
 

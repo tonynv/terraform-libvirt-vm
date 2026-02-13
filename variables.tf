@@ -51,3 +51,29 @@ variable "autostart" {
   type        = bool
   default     = true
 }
+
+# --- CIFS/SMB mounts ---
+
+variable "cifs_enabled" {
+  description = "Mount CIFS shares on boot."
+  type        = bool
+  default     = true
+}
+
+variable "cifs_server" {
+  description = "CIFS/SMB server IP or hostname."
+  type        = string
+  default     = "10.0.0.100"
+}
+
+variable "cifs_username" {
+  description = "CIFS authentication username."
+  type        = string
+  sensitive   = true
+}
+
+variable "cifs_password" {
+  description = "CIFS authentication password."
+  type        = string
+  sensitive   = true
+}

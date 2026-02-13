@@ -8,6 +8,7 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 - Auto-generated VM naming based on hypervisor hostname and OS type
 - Serial console and VNC graphics support
 - Cloud-init for automated guest configuration (hostname, users, SSH keys)
+- Optional CIFS/SMB shared filesystem mounts
 - Autostart support for Cockpit/virsh management
 
 ## Quick Start
@@ -68,6 +69,10 @@ A reusable Terraform module for provisioning KVM/QEMU virtual machines using the
 | `network_name`   | Libvirt network name to attach VMs to.                         | `string` | `"vlan200"`                            |
 | `ssh_public_key` | Path to SSH public key to inject into VMs.                     | `string` | `"~/.ssh/id_rsa.pub"`                 |
 | `autostart`      | Auto-start VMs on host boot (required for Cockpit management). | `bool`   | `true`                                 |
+| `cifs_enabled`   | Mount CIFS shares on boot.                                     | `bool`   | `true`                                 |
+| `cifs_server`    | CIFS/SMB server IP or hostname.                                | `string` | `"10.0.0.100"`                         |
+| `cifs_username`  | CIFS authentication username.                                  | `string` | --                                     |
+| `cifs_password`  | CIFS authentication password.                                  | `string` | --                                     |
 
 ## Outputs
 
@@ -87,4 +92,16 @@ Each VM is provisioned with a cloud-init ISO generated from `cloud-init.cfg`. Th
 - **SSH access** -- injects the public key from `ssh_public_key` (defaults to `~/.ssh/id_rsa.pub`)
 - **Packages** -- installs `git`, `curl`, and `zsh` on first boot
 - **Serial console** -- enables `serial-getty@ttyS0` for `virsh console` access
+- **CIFS mounts** -- optionally mounts a `/sharedfs` SMB share via `/etc/fstab`
 - **Dotfiles** -- clones and runs a dotfiles setup script for the `tonynv` user
+
+### CIFS/SMB Mounts
+
+When `cifs_enabled = true`, cloud-init will:
+
+1. Install `cifs-utils`
+2. Write SMB credentials to `/root/.smbcredentials-sharedfs` (mode `0600`)
+3. Add an `/etc/fstab` entry to mount `//{cifs_server}/sharedfs` at `/sharedfs`
+4. Run `mount -a` to mount the share on first boot
+
+The mount uses `nofail,_netdev` flags so the VM still boots if the share is unavailable. To disable CIFS entirely, set `cifs_enabled = false` in your `terraform.tfvars`.
